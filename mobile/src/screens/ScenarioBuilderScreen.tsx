@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -16,7 +16,11 @@ import {
 } from '@/data/scenarioBuilder';
 import { useCustomScenarios } from '@/hooks/useCustomScenarios';
 import { useProgress } from '@/context/ProgressContext';
-import { Difficulty } from '@/types';
+import { Difficulty, Scenario } from '@/types';
+import {
+  isAiBackendConfigured,
+  requestAiScenario,
+} from '@/services/aiClient';
 import { colors, radii, spacing, typography } from '@/theme';
 import { RootStackParamList } from '@/navigation/types';
 
@@ -37,7 +41,17 @@ export function ScenarioBuilderScreen() {
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
   const [ageRange, setAgeRange] = useState(ageOptions[0]);
 
-  const preview = useMemo(
+  const [aiScenario, setAiScenario] = useState<Scenario | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+  const aiAvailable = isAiBackendConfigured();
+
+  useEffect(() => {
+    setAiScenario(null);
+    setAiError(null);
+  }, [partner, setting, goal, catchphrase, difficulty, ageRange]);
+
+  const localPreview = useMemo(
     () =>
       buildScenario({
         childName: state.childName,
@@ -51,9 +65,40 @@ export function ScenarioBuilderScreen() {
     [state.childName, partner, setting, goal, catchphrase, difficulty, ageRange],
   );
 
+  const preview = aiScenario ?? localPreview;
+  const usingAi = aiScenario !== null;
+
   const handleSave = async () => {
     await add(preview);
     navigation.navigate('Scenario', { scenarioId: preview.id });
+  };
+
+  const handleAi = async () => {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const result = await requestAiScenario({
+        childName: state.childName,
+        partner,
+        setting,
+        goal,
+        catchphrase,
+        difficulty,
+        ageRange,
+      });
+      if (result.ok) {
+        setAiScenario(result.scenario);
+      } else {
+        setAiError(result.error);
+      }
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleResetAi = () => {
+    setAiScenario(null);
+    setAiError(null);
   };
 
   return (
@@ -116,8 +161,71 @@ export function ScenarioBuilderScreen() {
         </View>
       </Section>
 
+      <Card style={styles.aiCard}>
+        <View style={styles.aiHeaderRow}>
+          <Ionicons name="sparkles" size={20} color={colors.secondary} />
+          <Text style={styles.aiTitle}>Trợ lý AI</Text>
+          <Pill
+            label={usingAi ? 'Đang dùng AI' : 'Tạo nhanh'}
+            color={usingAi ? colors.success : colors.border}
+            textColor={usingAi ? colors.textOnPrimary : colors.textPrimary}
+          />
+        </View>
+        <Text style={styles.aiBody}>
+          AI sẽ mở rộng các lựa chọn của bé thành một kịch bản tự nhiên, sinh động hơn. Yêu cầu được
+          gửi qua backend an toàn — API key chỉ ở server, không bao giờ ở app này.
+        </Text>
+        {!aiAvailable ? (
+          <Text style={styles.aiNote}>
+            Backend chưa được cấu hình. Hãy đặt biến <Text style={styles.code}>EXPO_PUBLIC_API_BASE_URL</Text>{' '}
+            (URL của Next.js backend có <Text style={styles.code}>GEMINI_API_KEY</Text>) trong file{' '}
+            <Text style={styles.code}>mobile/.env</Text> và khởi động lại Expo.
+          </Text>
+        ) : null}
+        {aiError ? (
+          <View style={styles.aiErrorBox}>
+            <Ionicons name="warning" size={16} color={colors.danger} />
+            <Text style={styles.aiErrorText}>{aiError}</Text>
+          </View>
+        ) : null}
+        <View style={styles.aiActions}>
+          <Button
+            label={
+              aiLoading
+                ? 'Đang tạo…'
+                : usingAi
+                  ? 'Tạo lại bằng AI'
+                  : 'Mở rộng bằng AI'
+            }
+            variant="secondary"
+            disabled={!aiAvailable || aiLoading}
+            onPress={handleAi}
+            icon={
+              aiLoading ? (
+                <ActivityIndicator color={colors.textOnPrimary} />
+              ) : (
+                <Ionicons name="sparkles" size={18} color={colors.textOnPrimary} />
+              )
+            }
+          />
+          {usingAi ? (
+            <Button
+              label="Quay về kịch bản gốc"
+              variant="ghost"
+              onPress={handleResetAi}
+              icon={<Ionicons name="refresh" size={18} color={colors.primary} />}
+            />
+          ) : null}
+        </View>
+      </Card>
+
       <Card style={styles.preview}>
-        <Text style={styles.previewLabel}>Xem trước kịch bản</Text>
+        <View style={styles.previewLabelRow}>
+          <Text style={styles.previewLabel}>Xem trước kịch bản</Text>
+          {usingAi ? (
+            <Pill label="✨ Bản AI" color={colors.secondary} textColor={colors.textOnPrimary} />
+          ) : null}
+        </View>
         <View style={styles.previewHeader}>
           <Text style={styles.previewEmoji}>{preview.emoji}</Text>
           <View style={{ flex: 1 }}>
@@ -244,7 +352,42 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
   },
   preview: { borderWidth: 2, borderColor: colors.primary },
-  previewLabel: { ...typography.micro, color: colors.textMuted, marginBottom: spacing.sm },
+  previewLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.sm,
+  },
+  previewLabel: { ...typography.micro, color: colors.textMuted },
+  aiCard: { borderWidth: 2, borderColor: colors.secondary, gap: spacing.sm },
+  aiHeaderRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  aiTitle: { ...typography.subtitle, color: colors.textPrimary, flex: 1 },
+  aiBody: { ...typography.body, color: colors.textSecondary, marginTop: spacing.xs },
+  aiNote: {
+    ...typography.caption,
+    color: colors.textSecondary,
+    backgroundColor: colors.background,
+    padding: spacing.sm,
+    borderRadius: radii.md,
+    lineHeight: 18,
+  },
+  code: {
+    fontFamily: 'Courier',
+    backgroundColor: '#FFF1E6',
+    color: colors.primary,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+  },
+  aiErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+    backgroundColor: '#FCE5EC',
+    padding: spacing.sm,
+    borderRadius: radii.md,
+  },
+  aiErrorText: { ...typography.caption, color: colors.danger, flex: 1 },
+  aiActions: { flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap', marginTop: spacing.xs },
   previewHeader: { flexDirection: 'row', gap: spacing.md },
   previewEmoji: { fontSize: 36 },
   previewTitle: { ...typography.subtitle, color: colors.textPrimary },

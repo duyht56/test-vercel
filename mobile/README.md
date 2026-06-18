@@ -66,6 +66,30 @@ mobile/
 11. `ParentDashboardScreen` – Heatmap, thống kê, ghi chú phụ huynh.
 12. `ProfileScreen` – Hồ sơ + đa ngôn ngữ.
 
+## 🔐 Bảo mật & biến môi trường
+
+> **KHÔNG bao giờ đặt API key của Gemini hoặc bất cứ AI provider nào trong
+> mobile**. Bundle React Native có thể bị reverse-engineer trong vài phút.
+
+Mobile chỉ giữ duy nhất URL của backend (Next.js ở `/`):
+
+```bash
+cp .env.example .env
+# .env
+EXPO_PUBLIC_API_BASE_URL=https://your-backend.vercel.app
+```
+
+- Trong dev local: dùng `http://localhost:3000` (giả lập), hoặc IP LAN của máy
+  tính khi test trên thiết bị thật (`http://192.168.x.x:3000`).
+- Khi build production: dùng URL Vercel deployment.
+
+Backend đọc `GEMINI_API_KEY` từ server-side env (xem [`/README.md`](../README.md)
+ở repo root) và proxy mọi yêu cầu AI qua các endpoint `/api/ai/*`.
+
+Nếu chưa cấu hình backend, các tính năng không-AI (tất cả nội dung tĩnh, ghi
+âm, sticker, parent dashboard, tạo kịch bản template-based) vẫn hoạt động bình
+thường. Chỉ nút **“Mở rộng bằng AI”** trong `ScenarioBuilderScreen` sẽ bị disable.
+
 ## 🚀 Chạy thử
 
 ```bash
@@ -115,11 +139,16 @@ npm run tsc
 5. **Đa ngôn ngữ UI (vi/en)** – `i18n/strings.ts` + `useT()`, persist trong
    `ProgressContext`.
 
+### ✅ #6 Tích hợp AI hội thoại (qua backend proxy)
+- Backend Next.js `pages/api/ai/scenario.js` gọi Gemini với key chỉ ở server
+  (`process.env.GEMINI_API_KEY`).
+- Mobile gọi qua `EXPO_PUBLIC_API_BASE_URL` (chỉ chứa URL, không có key).
+- `ScenarioBuilderScreen` có nút "Mở rộng bằng AI" – tự động fall-back sang
+  template-based builder khi backend không có sẵn.
+
 ### 🚧 Tiếp theo
-6. **Tích hợp AI hội thoại** – dùng LLM (qua API có cấu hình key) để mở rộng
-   kịch bản ngẫu hứng theo phản hồi của bé.
-7. **Chế độ ngoại tuyến hoàn toàn** – đóng gói mọi asset (TTS audio cache),
-   kiểm tra mọi luồng hoạt động khi airplane mode.
+7. **Chế độ ngoại tuyến hoàn toàn** – đóng gói mọi asset, kiểm tra airplane mode.
 8. Speech-to-text để chấm điểm phát âm.
 9. Đồng bộ đám mây tuỳ chọn (Firebase/Supabase) cho gia đình nhiều thiết bị.
 10. Xuất ghi âm sang chia sẻ (share sheet).
+11. Endpoint AI mở rộng: feedback theo bản ghi âm của bé, gợi ý câu hỏi tiếp theo.
