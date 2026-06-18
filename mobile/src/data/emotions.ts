@@ -1,0 +1,68 @@
+import { EmotionCard } from '@/types';
+
+export const emotions: EmotionCard[] = [
+  {
+    id: 'happy',
+    name: 'Vui vẻ',
+    emoji: '😄',
+    color: '#FFD166',
+    exampleSentence: 'Hôm nay con rất vui vì được điểm cao môn Toán.',
+    practicePrompt: 'Kể một việc khiến con vui trong tuần này.',
+  },
+  {
+    id: 'sad',
+    name: 'Buồn',
+    emoji: '😢',
+    color: '#5BC0EB',
+    exampleSentence: 'Con thấy buồn khi chú cún ở nhà bị ốm.',
+    practicePrompt: 'Khi buồn, con thường làm gì để thấy khá hơn?',
+  },
+  {
+    id: 'angry',
+    name: 'Tức giận',
+    emoji: '😠',
+    color: '#EF476F',
+    exampleSentence: 'Con tức giận khi đồ chơi của mình bị hỏng.',
+    practicePrompt: 'Hãy tập nói: “Mình đang giận vì…”',
+  },
+  {
+    id: 'scared',
+    name: 'Sợ hãi',
+    emoji: '😨',
+    color: '#9D8DF1',
+    exampleSentence: 'Con thấy sợ khi đi trong bóng tối.',
+    practicePrompt: 'Khi sợ, con có thể nhờ ai giúp đỡ?',
+  },
+  {
+    id: 'excited',
+    name: 'Háo hức',
+    emoji: '🤩',
+    color: '#FF8A65',
+    exampleSentence: 'Con háo hức chờ đến chuyến đi sở thú cuối tuần.',
+    practicePrompt: 'Điều gì sắp tới khiến con háo hức?',
+  },
+  {
+    id: 'shy',
+    name: 'Ngại ngùng',
+    emoji: '😳',
+    color: '#FFB6C1',
+    exampleSentence: 'Con thấy ngại khi phải giới thiệu trước lớp.',
+    practicePrompt: 'Tập câu: “Con ngại nhưng vẫn sẽ thử nha.”',
+  },
+  {
+    id: 'proud',
+    name: 'Tự hào',
+    emoji: '😎',
+    color: '#06D6A0',
+    exampleSentence: 'Con tự hào vì đã giúp em nhỏ qua đường.',
+    practicePrompt: 'Việc gì gần đây khiến con tự hào về mình?',
+  },
+  {
+    id: 'thankful',
+    name: 'Biết ơn',
+    emoji: '🥰',
+    color: '#FFD8A8',
+    exampleSentence: 'Con biết ơn mẹ vì luôn chăm sóc con.',
+    practicePrompt: 'Hôm nay con muốn cảm ơn ai? Vì điều gì?',
+  },
+];
