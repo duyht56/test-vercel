@@ -10,52 +10,56 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { Pill } from '@/components/Pill';
 import { colors, radii, spacing, typography } from '@/theme';
 import { useProgress } from '@/context/ProgressContext';
+import { useT } from '@/i18n/useT';
 import { dailyChallenges } from '@/data/dailyChallenges';
+import { stickers } from '@/data/stickers';
 import { pickOfTheDay } from '@/utils/dates';
 import { RootStackParamList } from '@/navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
-const features = [
-  {
-    key: 'practice',
-    title: 'Luyện hội thoại',
-    subtitle: 'Đóng vai các tình huống đời thường',
-    emoji: '💬',
-    gradient: colors.gradientWarm,
-    target: 'Practice' as const,
-  },
-  {
-    key: 'stories',
-    title: 'Đọc truyện',
-    subtitle: 'Đọc to và trả lời câu hỏi',
-    emoji: '📖',
-    gradient: colors.gradientCool,
-    target: 'Stories' as const,
-  },
-  {
-    key: 'twisters',
-    title: 'Biến lưỡi',
-    subtitle: 'Trò chơi phát âm vui nhộn',
-    emoji: '🌀',
-    gradient: colors.gradientSun,
-    target: 'TongueTwisters' as const,
-  },
-  {
-    key: 'emotions',
-    title: 'Thẻ cảm xúc',
-    subtitle: 'Gọi tên điều con đang cảm thấy',
-    emoji: '💖',
-    gradient: colors.gradientPink,
-    target: 'Emotions' as const,
-  },
-];
-
 export function HomeScreen() {
   const navigation = useNavigation<Nav>();
   const { state } = useProgress();
+  const { t } = useT();
   const challenge = useMemo(() => pickOfTheDay(dailyChallenges), []);
   const nextLevelXp = Math.ceil((state.xp + 1) / 100) * 100;
+  const stickerCount = state.unlockedStickers.length;
+
+  const features = [
+    {
+      key: 'practice',
+      title: t('home.feature.practice'),
+      subtitle: t('home.feature.practice.sub'),
+      emoji: '💬',
+      gradient: colors.gradientWarm,
+      target: 'Practice',
+    },
+    {
+      key: 'stories',
+      title: t('home.feature.stories'),
+      subtitle: t('home.feature.stories.sub'),
+      emoji: '📖',
+      gradient: colors.gradientCool,
+      target: 'Stories',
+    },
+    {
+      key: 'twisters',
+      title: t('home.feature.twisters'),
+      subtitle: t('home.feature.twisters.sub'),
+      emoji: '🌀',
+      gradient: colors.gradientSun,
+      target: 'TongueTwisters',
+    },
+    {
+      key: 'emotions',
+      title: t('home.feature.emotions'),
+      subtitle: t('home.feature.emotions.sub'),
+      emoji: '💖',
+      gradient: colors.gradientPink,
+      target: 'Emotions',
+    },
+  ] as const;
 
   return (
     <ScrollView
@@ -65,23 +69,23 @@ export function HomeScreen() {
     >
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
-          <Text style={styles.greeting}>Xin chào, {state.childName}! 👋</Text>
-          <Text style={styles.subgreeting}>Hôm nay mình cùng tự tin nói nhé!</Text>
+          <Text style={styles.greeting}>{t('home.greeting', { name: state.childName })}</Text>
+          <Text style={styles.subgreeting}>{t('home.subgreeting')}</Text>
         </View>
         <View style={styles.streakBadge}>
           <Text style={styles.streakEmoji}>🔥</Text>
           <Text style={styles.streakValue}>{state.streak}</Text>
-          <Text style={styles.streakLabel}>ngày</Text>
+          <Text style={styles.streakLabel}>{t('home.streakUnit')}</Text>
         </View>
       </View>
 
       <Card style={styles.xpCard}>
         <View style={styles.xpHeader}>
           <View>
-            <Text style={typography.subtitle as any}>Kho sao của bé</Text>
+            <Text style={typography.subtitle}>{t('home.xpTitle')}</Text>
             <Text style={styles.xpValue}>{state.xp} XP</Text>
           </View>
-          <Pill label={`Mục tiêu: ${nextLevelXp}`} color={colors.accent} />
+          <Pill label={t('home.xpGoal', { target: nextLevelXp })} color={colors.accent} />
         </View>
         <View style={{ marginTop: spacing.md }}>
           <ProgressBar value={state.xp % 100} max={100} color={colors.primary} />
@@ -89,7 +93,7 @@ export function HomeScreen() {
       </Card>
 
       <LinearGradient
-        colors={colors.gradientMint as unknown as readonly [string, string]}
+        colors={colors.gradientMint}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.challengeCard}
@@ -97,7 +101,7 @@ export function HomeScreen() {
         <View style={styles.challengeHeader}>
           <Text style={styles.challengeEmoji}>{challenge.emoji}</Text>
           <View style={{ flex: 1 }}>
-            <Text style={styles.challengeKicker}>Thử thách hôm nay</Text>
+            <Text style={styles.challengeKicker}>{t('home.dailyKicker')}</Text>
             <Text style={styles.challengeTitle}>{challenge.title}</Text>
           </View>
           <Pill label={`+${challenge.xp} XP`} color="rgba(255,255,255,0.85)" />
@@ -105,7 +109,7 @@ export function HomeScreen() {
         <Text style={styles.challengeDesc}>{challenge.description}</Text>
       </LinearGradient>
 
-      <Text style={styles.sectionTitle}>Hôm nay con muốn luyện gì?</Text>
+      <Text style={styles.sectionTitle}>{t('home.featureTitle')}</Text>
 
       <View style={styles.featureGrid}>
         {features.map((f) => (
@@ -115,25 +119,38 @@ export function HomeScreen() {
             subtitle={f.subtitle}
             emoji={f.emoji}
             gradient={f.gradient}
-            onPress={() => navigation.navigate(f.target as any)}
+            onPress={() => navigation.navigate(f.target as never)}
           />
         ))}
       </View>
 
       <Card style={{ marginTop: spacing.lg }}>
-        <Text style={typography.subtitle as any}>Tiến độ của bé</Text>
+        <Text style={typography.subtitle}>{t('home.progressTitle')}</Text>
         <View style={styles.statsRow}>
-          <Stat emoji="💬" value={state.completedScenarios.length} label="hội thoại" />
-          <Stat emoji="📖" value={state.completedStories.length} label="truyện" />
-          <Stat emoji="🌀" value={state.completedTwisters.length} label="biến lưỡi" />
+          <Stat emoji="💬" value={state.completedScenarios.length} label={t('home.statScenarios')} />
+          <Stat emoji="📖" value={state.completedStories.length} label={t('home.statStories')} />
+          <Stat emoji="🌀" value={state.completedTwisters.length} label={t('home.statTwisters')} />
         </View>
-        <Button
-          label="Xem thành tích của bé"
-          variant="ghost"
-          onPress={() => navigation.navigate('Achievements' as any)}
-          icon={<Ionicons name="trophy" size={18} color={colors.primary} />}
-          style={{ marginTop: spacing.md }}
-        />
+        <View style={styles.shortcutCol}>
+          <Button
+            label={`${t('home.openShelf')} (${stickerCount}/${stickers.length})`}
+            variant="ghost"
+            onPress={() => navigation.navigate('Stickers')}
+            icon={<Ionicons name="sparkles" size={18} color={colors.primary} />}
+          />
+          <Button
+            label={t('home.openAchievements')}
+            variant="ghost"
+            onPress={() => navigation.navigate('Achievements')}
+            icon={<Ionicons name="trophy" size={18} color={colors.primary} />}
+          />
+          <Button
+            label={t('home.openParent')}
+            variant="ghost"
+            onPress={() => navigation.navigate('ParentDashboard')}
+            icon={<Ionicons name="people" size={18} color={colors.primary} />}
+          />
+        </View>
       </Card>
     </ScrollView>
   );
@@ -155,7 +172,7 @@ function FeatureTile({
   return (
     <Card onPress={onPress} style={styles.tile}>
       <LinearGradient
-        colors={gradient as unknown as readonly [string, string]}
+        colors={gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.tileEmojiBox}
@@ -240,4 +257,5 @@ const styles = StyleSheet.create({
   statEmoji: { fontSize: 24 },
   statValue: { ...typography.subtitle, color: colors.textPrimary, marginTop: 2 },
   statLabel: { ...typography.caption, color: colors.textMuted },
+  shortcutCol: { gap: spacing.sm, marginTop: spacing.md },
 });

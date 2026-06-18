@@ -10,7 +10,9 @@ import { Button } from '@/components/Button';
 import { ProgressBar } from '@/components/ProgressBar';
 import { Pill } from '@/components/Pill';
 import { DifficultyChip } from '@/components/DifficultyChip';
+import { RecorderControls } from '@/components/RecorderControls';
 import { scenarios } from '@/data/scenarios';
+import { useCustomScenarios } from '@/hooks/useCustomScenarios';
 import { useProgress } from '@/context/ProgressContext';
 import { colors, radii, spacing, typography } from '@/theme';
 import { RootStackParamList } from '@/navigation/types';
@@ -21,17 +23,18 @@ export function ScenarioScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'Scenario'>>();
   const navigation = useNavigation<Nav>();
   const { markScenario } = useProgress();
-  const scenario = useMemo(
-    () => scenarios.find((s) => s.id === route.params.scenarioId),
-    [route.params.scenarioId],
-  );
+  const { items: customScenarios } = useCustomScenarios();
+  const scenario = useMemo(() => {
+    const id = route.params.scenarioId;
+    return scenarios.find((s) => s.id === id) ?? customScenarios.find((s) => s.id === id);
+  }, [route.params.scenarioId, customScenarios]);
   const [stepIndex, setStepIndex] = useState(0);
   const [completed, setCompleted] = useState(false);
 
   if (!scenario) {
     return (
       <View style={styles.center}>
-        <Text style={typography.body as any}>Không tìm thấy kịch bản.</Text>
+        <Text style={typography.body}>Không tìm thấy kịch bản.</Text>
       </View>
     );
   }
@@ -139,6 +142,14 @@ export function ScenarioScreen() {
           </View>
         ))}
       </Card>
+
+      <View style={{ height: spacing.lg }} />
+      <RecorderControls
+        scope="scenario"
+        refId={scenario.id}
+        label={scenario.title}
+        emptyHint="Hãy ghi âm lời thoại của con. Nghe lại để biết mình đang tiến bộ thế nào!"
+      />
     </ScrollView>
   );
 }

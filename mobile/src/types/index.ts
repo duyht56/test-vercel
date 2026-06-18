@@ -73,5 +73,9 @@ export interface ProgressState {
   completedStories: string[];
   completedTwisters: string[];
   unlockedAchievements: string[];
+  unlockedStickers: string[];
+  recentlyUnlocked: string[];
+  activityLog: Record<string, number>;
   childName: string;
+  language: 'vi' | 'en';
 }

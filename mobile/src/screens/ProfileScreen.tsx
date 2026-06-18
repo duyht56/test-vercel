@@ -5,10 +5,12 @@ import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { ScreenHeader } from '@/components/ScreenHeader';
 import { useProgress } from '@/context/ProgressContext';
+import { useT } from '@/i18n/useT';
 import { colors, radii, spacing, typography } from '@/theme';
 
 export function ProfileScreen() {
-  const { state, setChildName, resetProgress } = useProgress();
+  const { state, setChildName, setLanguage, resetProgress } = useProgress();
+  const { t, lang } = useT();
   const [name, setName] = useState(state.childName);
   const [saved, setSaved] = useState(false);
 
@@ -19,32 +21,28 @@ export function ProfileScreen() {
   };
 
   const handleReset = () => {
-    Alert.alert(
-      'Đặt lại tiến độ?',
-      'Tất cả XP, huy hiệu và lịch sử sẽ bị xóa.',
-      [
-        { text: 'Hủy', style: 'cancel' },
-        { text: 'Đặt lại', style: 'destructive', onPress: () => resetProgress() },
-      ],
-    );
+    Alert.alert(t('profile.resetTitle'), t('profile.resetMessage'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.confirmReset'), style: 'destructive', onPress: () => resetProgress() },
+    ]);
   };
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <ScreenHeader emoji="🧒" title="Hồ sơ của bé" subtitle="Cá nhân hóa hành trình của con." />
+      <ScreenHeader emoji="🧒" title={t('profile.title')} subtitle={t('profile.subtitle')} />
 
       <Card>
-        <Text style={styles.label}>Tên gọi thân thương</Text>
+        <Text style={styles.label}>{t('profile.nameLabel')}</Text>
         <TextInput
           value={name}
           onChangeText={setName}
-          placeholder="VD: Bin, Bống, Su…"
+          placeholder={t('profile.namePlaceholder')}
           placeholderTextColor={colors.textMuted}
           style={styles.input}
           maxLength={24}
         />
         <Button
-          label={saved ? 'Đã lưu! 🎉' : 'Lưu tên'}
+          label={saved ? t('profile.saved') : t('profile.save')}
           onPress={handleSave}
           icon={<Ionicons name="save" size={18} color={colors.textOnPrimary} />}
           style={{ marginTop: spacing.md }}
@@ -52,17 +50,33 @@ export function ProfileScreen() {
       </Card>
 
       <Card style={{ marginTop: spacing.lg }}>
-        <Text style={styles.cardTitle}>Lời khuyên cho bố mẹ</Text>
-        <Text style={styles.cardBody}>
-          Hãy ngồi cạnh bé trong vài lần đầu. Khen ngợi từng nỗ lực, dù bé chỉ nói được một câu
-          ngắn. Sự cổ vũ của bố mẹ là nguồn năng lượng quan trọng nhất giúp bé tự tin hơn mỗi ngày.
-        </Text>
+        <Text style={styles.label}>{t('profile.languageLabel')}</Text>
+        <View style={styles.langRow}>
+          <Button
+            label="🇻🇳 Tiếng Việt"
+            variant={lang === 'vi' ? 'primary' : 'ghost'}
+            onPress={() => setLanguage('vi')}
+            style={styles.langBtn}
+          />
+          <Button
+            label="🇬🇧 English"
+            variant={lang === 'en' ? 'primary' : 'ghost'}
+            onPress={() => setLanguage('en')}
+            style={styles.langBtn}
+          />
+        </View>
+        <Text style={styles.note}>{t('profile.languageNote')}</Text>
       </Card>
 
       <Card style={{ marginTop: spacing.lg }}>
-        <Text style={styles.cardTitle}>Cài đặt nâng cao</Text>
+        <Text style={styles.cardTitle}>{t('profile.tipsTitle')}</Text>
+        <Text style={styles.cardBody}>{t('profile.tipsBody')}</Text>
+      </Card>
+
+      <Card style={{ marginTop: spacing.lg }}>
+        <Text style={styles.cardTitle}>{t('profile.advanced')}</Text>
         <Button
-          label="Đặt lại tiến độ"
+          label={t('profile.reset')}
           variant="ghost"
           onPress={handleReset}
           icon={<Ionicons name="refresh" size={18} color={colors.primary} />}
@@ -71,7 +85,7 @@ export function ProfileScreen() {
       </Card>
 
       <View style={{ height: spacing.xl }} />
-      <Text style={styles.version}>KidTalk · v0.1.0 · Bản dùng thử</Text>
+      <Text style={styles.version}>KidTalk · v0.2.0 · Bản dùng thử</Text>
     </ScrollView>
   );
 }
@@ -89,6 +103,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: colors.textPrimary,
   },
+  langRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.sm },
+  langBtn: { flex: 1, paddingHorizontal: 0 },
+  note: { ...typography.caption, color: colors.textSecondary, marginTop: spacing.sm },
   cardTitle: { ...typography.subtitle, color: colors.textPrimary, marginBottom: spacing.sm },
   cardBody: { ...typography.body, color: colors.textSecondary },
   version: { ...typography.caption, color: colors.textMuted, textAlign: 'center' },

@@ -1,6 +1,6 @@
 {
   "name": "kid-talk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "main": "node_modules/expo/AppEntry.js",
   "private": true,
   "scripts": {
@@ -17,6 +17,8 @@
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
     "expo": "~51.0.28",
+    "expo-av": "~14.0.7",
+    "expo-file-system": "~17.0.1",
     "expo-haptics": "~13.0.1",
     "expo-linear-gradient": "~13.0.2",
     "expo-speech": "~12.0.2",

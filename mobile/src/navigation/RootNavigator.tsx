@@ -6,19 +6,24 @@ import { Ionicons } from '@expo/vector-icons';
 import { HomeScreen } from '@/screens/HomeScreen';
 import { PracticeListScreen } from '@/screens/PracticeListScreen';
 import { ScenarioScreen } from '@/screens/ScenarioScreen';
+import { ScenarioBuilderScreen } from '@/screens/ScenarioBuilderScreen';
 import { StoriesScreen } from '@/screens/StoriesScreen';
 import { StoryReadScreen } from '@/screens/StoryReadScreen';
 import { TongueTwistersScreen } from '@/screens/TongueTwistersScreen';
 import { EmotionsScreen } from '@/screens/EmotionsScreen';
 import { AchievementsScreen } from '@/screens/AchievementsScreen';
+import { StickerCollectionScreen } from '@/screens/StickerCollectionScreen';
+import { ParentDashboardScreen } from '@/screens/ParentDashboardScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { colors } from '@/theme';
+import { useT } from '@/i18n/useT';
 import { RootStackParamList, TabParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tabs = createBottomTabNavigator<TabParamList>();
 
 function HomeTabs() {
+  const { t } = useT();
   return (
     <Tabs.Navigator
       screenOptions={({ route }) => ({
@@ -44,19 +49,24 @@ function HomeTabs() {
         },
       })}
     >
-      <Tabs.Screen name="Home" component={HomeScreen} options={{ title: 'Trang chính' }} />
+      <Tabs.Screen name="Home" component={HomeScreen} options={{ title: t('tab.home') }} />
       <Tabs.Screen
         name="PracticeTab"
         component={PracticeListScreen}
-        options={{ title: 'Hội thoại' }}
+        options={{ title: t('tab.practice') }}
       />
-      <Tabs.Screen name="StoriesTab" component={StoriesScreen} options={{ title: 'Truyện' }} />
-      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: 'Bé' }} />
+      <Tabs.Screen
+        name="StoriesTab"
+        component={StoriesScreen}
+        options={{ title: t('tab.stories') }}
+      />
+      <Tabs.Screen name="Profile" component={ProfileScreen} options={{ title: t('tab.profile') }} />
     </Tabs.Navigator>
   );
 }
 
 export function RootNavigator() {
+  const { t } = useT();
   return (
     <NavigationContainer>
       <Stack.Navigator
@@ -68,13 +78,56 @@ export function RootNavigator() {
         }}
       >
         <Stack.Screen name="Tabs" component={HomeTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="Practice" component={PracticeListScreen} options={{ title: 'Luyện hội thoại' }} />
-        <Stack.Screen name="Scenario" component={ScenarioScreen} options={{ title: 'Đóng vai' }} />
-        <Stack.Screen name="Stories" component={StoriesScreen} options={{ title: 'Đọc truyện' }} />
-        <Stack.Screen name="StoryRead" component={StoryReadScreen} options={{ title: 'Truyện hay' }} />
-        <Stack.Screen name="TongueTwisters" component={TongueTwistersScreen} options={{ title: 'Biến lưỡi' }} />
-        <Stack.Screen name="Emotions" component={EmotionsScreen} options={{ title: 'Cảm xúc' }} />
-        <Stack.Screen name="Achievements" component={AchievementsScreen} options={{ title: 'Huy hiệu' }} />
+        <Stack.Screen
+          name="Practice"
+          component={PracticeListScreen}
+          options={{ title: t('stack.practice') }}
+        />
+        <Stack.Screen
+          name="Scenario"
+          component={ScenarioScreen}
+          options={{ title: t('stack.scenario') }}
+        />
+        <Stack.Screen
+          name="ScenarioBuilder"
+          component={ScenarioBuilderScreen}
+          options={{ title: t('stack.builder') }}
+        />
+        <Stack.Screen
+          name="Stories"
+          component={StoriesScreen}
+          options={{ title: t('stack.stories') }}
+        />
+        <Stack.Screen
+          name="StoryRead"
+          component={StoryReadScreen}
+          options={{ title: t('stack.story') }}
+        />
+        <Stack.Screen
+          name="TongueTwisters"
+          component={TongueTwistersScreen}
+          options={{ title: t('stack.twisters') }}
+        />
+        <Stack.Screen
+          name="Emotions"
+          component={EmotionsScreen}
+          options={{ title: t('stack.emotions') }}
+        />
+        <Stack.Screen
+          name="Achievements"
+          component={AchievementsScreen}
+          options={{ title: t('stack.achievements') }}
+        />
+        <Stack.Screen
+          name="Stickers"
+          component={StickerCollectionScreen}
+          options={{ title: t('stack.stickers') }}
+        />
+        <Stack.Screen
+          name="ParentDashboard"
+          component={ParentDashboardScreen}
+          options={{ title: t('stack.parent') }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

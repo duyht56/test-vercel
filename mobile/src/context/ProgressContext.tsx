@@ -10,8 +10,10 @@ import { ProgressState } from '@/types';
 import { storage } from '@/utils/storage';
 import { diffInDays, todayKey } from '@/utils/dates';
 import { achievements } from '@/data/achievements';
+import { stickers } from '@/data/stickers';
 
-const STORAGE_KEY = '@kid-talk/progress-v1';
+const STORAGE_KEY = '@kid-talk/progress-v2';
+const LEGACY_KEY_V1 = '@kid-talk/progress-v1';
 
 const initialState: ProgressState = {
   xp: 0,
@@ -21,7 +23,11 @@ const initialState: ProgressState = {
   completedStories: [],
   completedTwisters: [],
   unlockedAchievements: [],
+  unlockedStickers: [],
+  recentlyUnlocked: [],
+  activityLog: {},
   childName: 'Bạn nhỏ',
+  language: 'vi',
 };
 
 interface ProgressContextValue {
@@ -32,38 +38,60 @@ interface ProgressContextValue {
   markStory: (id: string, xp?: number) => Promise<void>;
   markTwister: (id: string, xp?: number) => Promise<void>;
   setChildName: (name: string) => Promise<void>;
+  setLanguage: (lang: 'vi' | 'en') => Promise<void>;
+  consumeRecentUnlocks: () => Promise<string[]>;
   resetProgress: () => Promise<void>;
 }
 
 const ProgressContext = createContext<ProgressContextValue | undefined>(undefined);
 
-function evaluateAchievements(state: ProgressState): string[] {
-  const unlocked = new Set(state.unlockedAchievements);
+function valueForType(state: ProgressState, type: string): number {
+  switch (type) {
+    case 'scenarios':
+      return state.completedScenarios.length;
+    case 'stories':
+      return state.completedStories.length;
+    case 'twisters':
+      return state.completedTwisters.length;
+    case 'streak':
+      return state.streak;
+    case 'xp':
+      return state.xp;
+    default:
+      return 0;
+  }
+}
+
+function evaluateAchievements(state: ProgressState): {
+  achievements: string[];
+  stickers: string[];
+  newlyUnlocked: string[];
+} {
+  const prevA = new Set(state.unlockedAchievements);
+  const prevS = new Set(state.unlockedStickers);
+  const newlyUnlocked: string[] = [];
+
+  const nextA = new Set(prevA);
   for (const a of achievements) {
-    if (unlocked.has(a.id)) continue;
-    let value = 0;
-    switch (a.type) {
-      case 'scenarios':
-        value = state.completedScenarios.length;
-        break;
-      case 'stories':
-        value = state.completedStories.length;
-        break;
-      case 'twisters':
-        value = state.completedTwisters.length;
-        break;
-      case 'streak':
-        value = state.streak;
-        break;
-      case 'xp':
-        value = state.xp;
-        break;
-    }
-    if (value >= a.threshold) {
-      unlocked.add(a.id);
+    if (!prevA.has(a.id) && valueForType(state, a.type) >= a.threshold) {
+      nextA.add(a.id);
+      newlyUnlocked.push(`achievement:${a.id}`);
     }
   }
-  return Array.from(unlocked);
+
+  const nextS = new Set(prevS);
+  for (const s of stickers) {
+    if (!prevS.has(s.id) && valueForType(state, s.unlock.type) >= s.unlock.threshold) {
+      nextS.add(s.id);
+      newlyUnlocked.push(`sticker:${s.id}`);
+    }
+  }
+
+  return {
+    achievements: Array.from(nextA),
+    stickers: Array.from(nextS),
+    newlyUnlocked,
+  };
 }
 
 function bumpStreak(state: ProgressState): ProgressState {
@@ -85,6 +113,20 @@ function bumpStreak(state: ProgressState): ProgressState {
   return { ...state, streak: nextStreak, lastActiveDate: today };
 }
 
+function bumpActivity(state: ProgressState): ProgressState {
+  const today = todayKey();
+  const log = { ...state.activityLog };
+  log[today] = (log[today] ?? 0) + 1;
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 60);
+  const cutoffKey = todayKey(cutoff);
+  const trimmed: Record<string, number> = {};
+  for (const k of Object.keys(log)) {
+    if (k >= cutoffKey) trimmed[k] = log[k];
+  }
+  return { ...state, activityLog: trimmed };
+}
+
 export function ProgressProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<ProgressState>(initialState);
   const [ready, setReady] = useState(false);
@@ -92,9 +134,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const stored = await storage.get<ProgressState>(STORAGE_KEY);
+      let stored = await storage.get<ProgressState>(STORAGE_KEY);
+      if (!stored) {
+        const legacy = await storage.get<Partial<ProgressState>>(LEGACY_KEY_V1);
+        if (legacy) {
+          stored = { ...initialState, ...legacy } as ProgressState;
+          await storage.set(STORAGE_KEY, stored);
+        }
+      }
       if (mounted) {
-        setState(stored ?? initialState);
+        setState(stored ? { ...initialState, ...stored } : initialState);
         setReady(true);
       }
     })();
@@ -110,12 +159,16 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
 
   const update = useCallback(
     async (mutator: (prev: ProgressState) => ProgressState) => {
-      const next = bumpStreak(mutator(state));
-      const withAchievements = {
+      let next = bumpStreak(mutator(state));
+      next = bumpActivity(next);
+      const evaluated = evaluateAchievements(next);
+      const finalState: ProgressState = {
         ...next,
-        unlockedAchievements: evaluateAchievements(next),
+        unlockedAchievements: evaluated.achievements,
+        unlockedStickers: evaluated.stickers,
+        recentlyUnlocked: [...next.recentlyUnlocked, ...evaluated.newlyUnlocked],
       };
-      await persist(withAchievements);
+      await persist(finalState);
     },
     [persist, state],
   );
@@ -166,13 +219,47 @@ export function ProgressProvider({ children }: { children: React.ReactNode }) {
     [persist, state],
   );
 
+  const setLanguage = useCallback(
+    (lang: 'vi' | 'en') => persist({ ...state, language: lang }),
+    [persist, state],
+  );
+
+  const consumeRecentUnlocks = useCallback(async () => {
+    const unlocks = state.recentlyUnlocked;
+    if (unlocks.length === 0) return [];
+    await persist({ ...state, recentlyUnlocked: [] });
+    return unlocks;
+  }, [persist, state]);
+
   const resetProgress = useCallback(async () => {
     await persist(initialState);
   }, [persist]);
 
   const value = useMemo<ProgressContextValue>(
-    () => ({ state, ready, addXp, markScenario, markStory, markTwister, setChildName, resetProgress }),
-    [state, ready, addXp, markScenario, markStory, markTwister, setChildName, resetProgress],
+    () => ({
+      state,
+      ready,
+      addXp,
+      markScenario,
+      markStory,
+      markTwister,
+      setChildName,
+      setLanguage,
+      consumeRecentUnlocks,
+      resetProgress,
+    }),
+    [
+      state,
+      ready,
+      addXp,
+      markScenario,
+      markStory,
+      markTwister,
+      setChildName,
+      setLanguage,
+      consumeRecentUnlocks,
+      resetProgress,
+    ],
   );
 
   return <ProgressContext.Provider value={value}>{children}</ProgressContext.Provider>;

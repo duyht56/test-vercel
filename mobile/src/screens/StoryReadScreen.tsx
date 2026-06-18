@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Card } from '@/components/Card';
 import { Button } from '@/components/Button';
 import { Pill } from '@/components/Pill';
+import { RecorderControls } from '@/components/RecorderControls';
 import { stories } from '@/data/stories';
 import { useProgress } from '@/context/ProgressContext';
 import { colors, radii, spacing, typography } from '@/theme';
@@ -27,7 +28,7 @@ export function StoryReadScreen() {
   if (!story) {
     return (
       <View style={styles.center}>
-        <Text style={typography.body as any}>Không tìm thấy truyện.</Text>
+        <Text style={typography.body}>Không tìm thấy truyện.</Text>
       </View>
     );
   }
@@ -99,6 +100,14 @@ export function StoryReadScreen() {
           </View>
         ))}
       </Card>
+
+      <View style={{ height: spacing.lg }} />
+      <RecorderControls
+        scope="story"
+        refId={story.id}
+        label={story.title}
+        emptyHint="Bé thử đọc to cả truyện và ghi âm lại. Tuần sau nghe lại sẽ thấy đọc trôi chảy hơn rất nhiều!"
+      />
 
       <View style={{ height: spacing.xl }} />
       <Button

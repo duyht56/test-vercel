@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { ProgressProvider } from '@/context/ProgressContext';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { UnlockToast } from '@/components/UnlockToast';
 
 export default function App() {
   return (
@@ -13,6 +14,7 @@ export default function App() {
         <ProgressProvider>
           <StatusBar style="dark" />
           <RootNavigator />
+          <UnlockToast />
         </ProgressProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
