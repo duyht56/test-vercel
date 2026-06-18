@@ -1,0 +1,68 @@
+import { Achievement } from '@/types';
+
+export const achievements: Achievement[] = [
+  {
+    id: 'first-step',
+    title: 'Bước đầu tiên',
+    description: 'Hoàn thành 1 kịch bản giao tiếp.',
+    emoji: '👣',
+    threshold: 1,
+    type: 'scenarios',
+  },
+  {
+    id: 'chatter-bug',
+    title: 'Chuyên gia trò chuyện',
+    description: 'Hoàn thành 5 kịch bản giao tiếp.',
+    emoji: '🗣️',
+    threshold: 5,
+    type: 'scenarios',
+  },
+  {
+    id: 'story-teller',
+    title: 'Người kể chuyện',
+    description: 'Đọc xong 3 câu chuyện.',
+    emoji: '📖',
+    threshold: 3,
+    type: 'stories',
+  },
+  {
+    id: 'sharp-tongue',
+    title: 'Lưỡi dẻo',
+    description: 'Hoàn thành 5 câu biến lưỡi.',
+    emoji: '🌀',
+    threshold: 5,
+    type: 'twisters',
+  },
+  {
+    id: 'streak-3',
+    title: 'Bền bỉ 3 ngày',
+    description: 'Luyện tập 3 ngày liên tiếp.',
+    emoji: '🔥',
+    threshold: 3,
+    type: 'streak',
+  },
+  {
+    id: 'streak-7',
+    title: 'Tuần kim cương',
+    description: 'Luyện tập 7 ngày liên tiếp.',
+    emoji: '💎',
+    threshold: 7,
+    type: 'streak',
+  },
+  {
+    id: 'xp-100',
+    title: 'Ngôi sao 100 XP',
+    description: 'Tích đủ 100 điểm kinh nghiệm.',
+    emoji: '⭐',
+    threshold: 100,
+    type: 'xp',
+  },
+  {
+    id: 'xp-500',
+    title: 'Siêu sao 500 XP',
+    description: 'Tích đủ 500 điểm kinh nghiệm.',
+    emoji: '🌟',
+    threshold: 500,
+    type: 'xp',
+  },
+];
